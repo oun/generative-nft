@@ -5,7 +5,14 @@ interface TraitType {
 
 interface Config {
   layers: Array<Layer>;
+  metadata: Metadata;
   imageSize: ImageSize;
+}
+
+interface Metadata {
+  name: string;
+  description: string;
+  image: string;
 }
 
 interface ImageSize {
@@ -22,6 +29,7 @@ interface Trait {
   value: string;
 }
 
-interface Metadata {
+interface Collectible {
+  name: string;
   traits: Array<Trait>;
 }
