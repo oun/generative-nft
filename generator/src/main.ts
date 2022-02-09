@@ -1,17 +1,17 @@
-import yargs from 'yargs/yargs';
 import fs from 'fs/promises';
 import path from 'path';
 import { createCanvas, loadImage } from 'canvas';
 import axios from 'axios';
 import FormData from 'form-data';
+import { Command } from 'commander';
 
 async function createTraitTypes(
   config: Config,
-  argv: any
+  inputDir: string
 ): Promise<Array<TraitType>> {
   const traits = [];
   for (const layer of config.layers) {
-    const traitDir = path.join(argv.l, layer.name);
+    const traitDir = path.join(inputDir, layer.name);
     const files = await fs.readdir(traitDir);
     const values = files.map((e) => path.parse(e).name);
     const trait: TraitType = { name: layer.name, values };
@@ -43,7 +43,7 @@ async function createMetadata(
   imagePathPrefix: string,
   metadata: Metadata,
   outputDir: string
-) {
+): Promise<void> {
   await fs.mkdir(outputDir, { recursive: true });
   for (let i = 0; i < collectibles.length; i++) {
     const c = collectibles[i];
@@ -59,13 +59,16 @@ async function createMetadata(
       null,
       2
     );
-    const outputFile = path.join(outputDir, `${n}.json`);
+    const outputFile = path.join(outputDir, `${n}`);
     console.log(`Writing metadata ${outputFile}`);
     await fs.writeFile(outputFile, json);
   }
 }
 
-async function updateMetadata(metadataDir: string, imagePrefixPath: string) {
+async function updateMetadata(
+  metadataDir: string,
+  imagePrefixPath: string
+): Promise<void> {
   const files = await fs.readdir(metadataDir);
   for (const f of files) {
     const filePath = path.join(metadataDir, f);
@@ -82,7 +85,7 @@ async function createImages(
   layerDir: string,
   imageSize: ImageSize,
   outputDir: string
-) {
+): Promise<void> {
   const canvas = createCanvas(imageSize.width, imageSize.height);
   const ctx = canvas.getContext('2d');
   await fs.mkdir(outputDir, { recursive: true });
@@ -100,7 +103,12 @@ async function createImages(
   }
 }
 
-async function upload(projectId: string, secret: string, directory: string) {
+async function uploadDirectory(
+  projectId: string,
+  secret: string,
+  directory: string
+): Promise<string> {
+  console.log(`Uploading directory ${directory}...`);
   const client = axios.create({
     baseURL: 'https://ipfs.infura.io:5001',
     auth: {
@@ -130,88 +138,80 @@ async function upload(projectId: string, secret: string, directory: string) {
   return lines[lines.length - 1]['Hash'];
 }
 
-function parseArgs() {
-  return yargs(process.argv.slice(2))
-    .options({
-      u: {
-        type: 'boolean',
-        alias: 'upload',
-        description: 'Enable upload output directory to IPFS',
-        default: false
-      },
-      g: {
-        type: 'boolean',
-        alias: 'generate',
-        description: 'Enable generating images',
-        default: false
-      },
-      c: {
-        type: 'string',
-        alias: 'config-file',
-        description: 'Path to configuration file',
-        default: 'config.json'
-      },
-      n: {
-        type: 'number',
-        alias: 'total',
-        description: 'Total number of images to generated',
-        default: 100
-      },
-      o: {
-        type: 'string',
-        alias: 'output-dir',
-        description: 'Output directory',
-        default: 'build'
-      },
-      l: {
-        type: 'string',
-        alias: 'layers-dir',
-        description: 'Directory that store layer images',
-        default: 'layers'
-      },
-      'project-id': {
-        type: 'string',
-        description: 'Influra project ID',
-        default: ''
-      },
-      'project-secret': {
-        type: 'string',
-        description: 'Influra project secret',
-        default: ''
-      }
-    })
-    .parseSync();
+async function readConfig(configFile: string): Promise<Config> {
+  const f = await fs.readFile(configFile);
+  return JSON.parse(f.toString());
 }
 
-async function main() {
-  try {
-    const argv = parseArgs();
-
-    const f = await fs.readFile(argv.c);
-    const config: Config = JSON.parse(f.toString());
-    const imagesDir = path.join(argv.o, 'images');
-    const metadataDir = path.join(argv.o, 'metadata');
-
-    if (argv.g) {
-      console.log('Generating images...');
-      const traitTypes = await createTraitTypes(config, argv);
-      const list = generate(argv.n, traitTypes);
-      await createImages(list, argv.l, config.imageSize, imagesDir);
-
-      console.log('Generating metadata...');
-      await createMetadata(list, '', config.metadata, metadataDir);
-    }
-
-    if (argv.u) {
-      console.log(`Uploading ${imagesDir} to IPFS...`);
-      const cid = await upload(argv.projectId, argv.projectSecret, imagesDir);
-      await updateMetadata(metadataDir, `https://infura-ipfs.io/ipfs/${cid}`);
-      console.log(`Uploading ${metadataDir} to IPFS...`);
-      await upload(argv.projectId, argv.projectSecret, metadataDir);
-    }
-  } catch (err) {
-    console.log(err);
-  }
+async function create(): Promise<void> {
+  const config: Config = await readConfig(this.opts().config);
+  const imagesDir = path.join(this.opts().outputDirectory, 'images');
+  const metadataDir = path.join(this.opts().outputDirectory, 'metadata');
+  const traitTypes = await createTraitTypes(config, this.opts().inputDirectory);
+  const list = generate(this.opts().limit, traitTypes);
+  await createImages(
+    list,
+    this.opts().inputDirectory,
+    config.imageSize,
+    imagesDir
+  );
+  await createMetadata(list, '', config.metadata, metadataDir);
 }
 
-main();
+async function upload(): Promise<void> {
+  const imagesDir = path.join(this.opts().outputDirectory, 'images');
+  const metadataDir = path.join(this.opts().outputDirectory, 'metadata');
+  const imagesDirCid = await uploadDirectory(
+    this.opts().projectId,
+    this.opts().projectSecret,
+    imagesDir
+  );
+  console.log(`Images directory CID: ${imagesDirCid}`);
+  await updateMetadata(
+    metadataDir,
+    `https://infura-ipfs.io/ipfs/${imagesDirCid}`
+  );
+  const metadataDirCid = await uploadDirectory(
+    this.opts().projectId,
+    this.opts().projectSecret,
+    metadataDir
+  );
+  console.log(`Metadata directory CID: ${metadataDirCid}`);
+}
+
+const program = new Command();
+
+program
+  .name('generator')
+  .description('CLI to generate NFT images and metadata')
+  .version('0.0.1');
+
+program
+  .command('create')
+  .description('Create NFT images and metadata')
+  .requiredOption(
+    '-c, --config <file>',
+    'path to configuration file',
+    'config.json'
+  )
+  .requiredOption('-n, --limit <number>', 'number of images to create', '10')
+  .requiredOption('-o, --output-directory <dir>', 'output directory', 'build')
+  .requiredOption(
+    '-i, --input-directory <dir>',
+    'input directory contains layer images',
+    'layers'
+  )
+  .action(create);
+
+program
+  .command('upload')
+  .description('Upload NFT images and metadata to IPFS pinning service')
+  .requiredOption('-p, --project-id <string>', 'pinning service project ID')
+  .requiredOption(
+    '-s, --project-secret <string>',
+    'pinning service project secret'
+  )
+  .requiredOption('-o, --output-directory <dir>', 'output directory', 'build')
+  .action(upload);
+
+program.parseAsync(process.argv);
