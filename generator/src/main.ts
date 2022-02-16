@@ -1,9 +1,8 @@
+import PinataSDK from '@pinata/sdk';
+import { createCanvas, loadImage } from 'canvas';
+import { Command } from 'commander';
 import fs from 'fs/promises';
 import path from 'path';
-import { createCanvas, loadImage } from 'canvas';
-import axios from 'axios';
-import FormData from 'form-data';
-import { Command } from 'commander';
 
 async function createTraitTypes(
   config: Config,
@@ -104,38 +103,14 @@ async function createImages(
 }
 
 async function uploadDirectory(
-  projectId: string,
+  key: string,
   secret: string,
   directory: string
 ): Promise<string> {
   console.log(`Uploading directory ${directory}...`);
-  const client = axios.create({
-    baseURL: 'https://ipfs.infura.io:5001',
-    auth: {
-      username: projectId,
-      password: secret
-    }
-  });
-  const form = new FormData();
-  const files = await fs.readdir(directory, { withFileTypes: true });
-  for (const file of files.filter((e) => e.isFile()).map((e) => e.name)) {
-    const filePath = path.join(directory, file);
-    const f = await fs.readFile(filePath);
-    if (f.length > 0) {
-      form.append('file', f, {
-        filename: filePath
-      });
-    }
-  }
-  const res = await client.post('/api/v0/add', form, {
-    params: { 'wrap-with-directory': true, pin: true },
-    headers: form.getHeaders()
-  });
-  const lines = res.data
-    .split('\n')
-    .filter((e) => e.trim() !== '')
-    .map((e) => JSON.parse(e));
-  return lines[lines.length - 1]['Hash'];
+  const pinata = PinataSDK(key, secret);
+  const result = await pinata.pinFromFS(directory);
+  return result.IpfsHash;
 }
 
 async function readConfig(configFile: string): Promise<Config> {
@@ -144,39 +119,47 @@ async function readConfig(configFile: string): Promise<Config> {
 }
 
 async function create(): Promise<void> {
-  const config: Config = await readConfig(this.opts().config);
-  const imagesDir = path.join(this.opts().outputDirectory, 'images');
-  const metadataDir = path.join(this.opts().outputDirectory, 'metadata');
-  const traitTypes = await createTraitTypes(config, this.opts().inputDirectory);
-  const list = generate(this.opts().limit, traitTypes);
-  await createImages(
-    list,
-    this.opts().inputDirectory,
-    config.imageSize,
-    imagesDir
-  );
-  await createMetadata(list, '', config.metadata, metadataDir);
+  try {
+    const config: Config = await readConfig(this.opts().config);
+    const imagesDir = path.join(this.opts().outputDirectory, 'images');
+    const metadataDir = path.join(this.opts().outputDirectory, 'metadata');
+    const traitTypes = await createTraitTypes(
+      config,
+      this.opts().inputDirectory
+    );
+    const list = generate(this.opts().limit, traitTypes);
+    await createImages(
+      list,
+      this.opts().inputDirectory,
+      config.imageSize,
+      imagesDir
+    );
+    await createMetadata(list, '', config.metadata, metadataDir);
+  } catch (error) {
+    console.log('Error generating images', error);
+  }
 }
 
 async function upload(): Promise<void> {
-  const imagesDir = path.join(this.opts().outputDirectory, 'images');
-  const metadataDir = path.join(this.opts().outputDirectory, 'metadata');
-  const imagesDirCid = await uploadDirectory(
-    this.opts().projectId,
-    this.opts().projectSecret,
-    imagesDir
-  );
-  console.log(`Images directory CID: ${imagesDirCid}`);
-  await updateMetadata(
-    metadataDir,
-    `https://infura-ipfs.io/ipfs/${imagesDirCid}`
-  );
-  const metadataDirCid = await uploadDirectory(
-    this.opts().projectId,
-    this.opts().projectSecret,
-    metadataDir
-  );
-  console.log(`Metadata directory CID: ${metadataDirCid}`);
+  try {
+    const { apiKey, apiSecret, outputDirectory } = this.opts();
+    const imagesDir = path.join(outputDirectory, 'images');
+    const metadataDir = path.join(outputDirectory, 'metadata');
+    const imagesDirCid = await uploadDirectory(apiKey, apiSecret, imagesDir);
+    console.log(`Images directory CID: ${imagesDirCid}`);
+    await updateMetadata(
+      metadataDir,
+      `https://gateway.pinata.cloud/ipfs/${imagesDirCid}`
+    );
+    const metadataDirCid = await uploadDirectory(
+      apiKey,
+      apiSecret,
+      metadataDir
+    );
+    console.log(`Metadata directory CID: ${metadataDirCid}`);
+  } catch (error) {
+    console.log('Error uploading files', error);
+  }
 }
 
 const program = new Command();
@@ -205,12 +188,9 @@ program
 
 program
   .command('upload')
-  .description('Upload NFT images and metadata to IPFS pinning service')
-  .requiredOption('-p, --project-id <string>', 'pinning service project ID')
-  .requiredOption(
-    '-s, --project-secret <string>',
-    'pinning service project secret'
-  )
+  .description('Upload NFT images and metadata to Pinata')
+  .requiredOption('-k, --api-key <string>', 'Pinata API key')
+  .requiredOption('-s, --api-secret <string>', 'Pinata API secret')
   .requiredOption('-o, --output-directory <dir>', 'output directory', 'build')
   .action(upload);
 
