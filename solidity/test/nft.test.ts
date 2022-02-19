@@ -11,10 +11,10 @@ describe("NFT", () => {
     await contract.deployed();
   });
 
-  it("should mint to address", async () => {
+  it("should mint a token to address", async () => {
     const [owner, acct] = await ethers.getSigners();
     expect(
-      contract.mintTo(acct.address, {
+      contract.mintTo(acct.address, 1, {
         value: ethers.utils.parseEther("0.02"),
       })
     )
@@ -24,21 +24,44 @@ describe("NFT", () => {
     expect(await contract.balanceOf(acct.address)).to.eq("1");
   });
 
-  it("should return new token id", async () => {
+  it("should mint multiple tokens to address", async () => {
     const [owner, acct] = await ethers.getSigners();
     expect(
-      await contract.callStatic.mintTo(acct.address, {
-        value: ethers.utils.parseEther("0.02"),
+      contract.mintTo(acct.address, 3, {
+        value: ethers.utils.parseEther("0.06"),
       })
-    ).to.eq(1);
+    )
+      .to.emit(contract, "Transfer")
+      .withArgs(ethers.constants.AddressZero, acct.address, "3");
+
+    expect(await contract.balanceOf(acct.address)).to.eq("3");
   });
 
-  it("should not mint given value less than mint price", async () => {
+  it("should not mint a token given value less than mint price", async () => {
     const [owner, acct] = await ethers.getSigners();
     expect(
-      contract.callStatic.mintTo(acct.address, {
+      contract.callStatic.mintTo(acct.address, 1, {
         value: ethers.utils.parseEther("0.01"),
       })
     ).to.be.revertedWith("Transaction value did not equal the mint price");
+  });
+
+  it("should not mint multiple tokens given value less than mint price", async () => {
+    const [owner, acct] = await ethers.getSigners();
+    expect(
+      contract.callStatic.mintTo(acct.address, 3, {
+        value: ethers.utils.parseEther("0.01"),
+      })
+    ).to.be.revertedWith("Transaction value did not equal the mint price");
+  });
+
+  it("should set base token uri", async () => {
+    const [owner, acct] = await ethers.getSigners();
+    contract.mintTo(acct.address, 1, {
+      value: ethers.utils.parseEther("0.02"),
+    });
+    contract.setBaseTokenURI("ipfs://new-token-uri/");
+
+    expect(await contract.tokenURI(1)).to.eq("ipfs://new-token-uri/1");
   });
 });
