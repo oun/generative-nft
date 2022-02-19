@@ -1,197 +1,130 @@
 import PinataSDK from '@pinata/sdk';
 import { createCanvas, loadImage } from 'canvas';
-import { Command } from 'commander';
 import fs from 'fs/promises';
 import path from 'path';
+import Config from './config';
+import Random from './random';
 
-async function createTraitTypes(
-  config: Config,
-  inputDir: string
-): Promise<Array<TraitType>> {
-  const traits = [];
-  for (const layer of config.layers) {
-    const traitDir = path.join(inputDir, layer.name);
-    const files = await fs.readdir(traitDir);
-    const values = files.map((e) => path.parse(e).name);
-    const trait: TraitType = { name: layer.name, values };
-    traits.push(trait);
+export async function generate(): Promise<void> {
+  try {
+    const { output, limit, config } = this.opts();
+    const configuration: Config = await Config.loadFromFile(config);
+    const collectibles = generateCollectibles(limit, configuration);
+    await fs.mkdir(path.dirname(output), { recursive: true });
+    await fs.writeFile(output, JSON.stringify(collectibles, null, 2));
+  } catch (error) {
+    console.log(`Error creating collectibles: ${error}`);
   }
-  return traits;
 }
 
-function generate(
+function generateCollectibles(
   total: number,
-  traitTypes: Array<TraitType>
+  config: Config
 ): Array<Collectible> {
-  const results = [];
+  const random = new Random(config.rarities);
+  const results: Array<Collectible> = [];
   for (let i = 0; i < total; i++) {
-    const traits = traitTypes.map((t) => {
-      const r = Math.floor(Math.random() * t.values.length);
-      return {
-        name: t.name,
-        value: t.values[r]
-      };
+    const [score, attributes] = randomAttributes(random, config);
+    results.push({
+      id: i + 1,
+      rarity: score,
+      attributes
     });
-    results.push({ traits });
   }
   return results;
 }
 
-async function createMetadata(
-  collectibles: Array<Collectible>,
-  imagePathPrefix: string,
-  metadata: Metadata,
-  outputDir: string
-): Promise<void> {
-  await fs.mkdir(outputDir, { recursive: true });
-  for (let i = 0; i < collectibles.length; i++) {
-    const c = collectibles[i];
-    const n = i + 1;
-    const attr = c.traits.map((e) => ({ trait_type: e.name, value: e.value }));
-    const json = JSON.stringify(
-      {
-        name: `${metadata.name}${n}`,
-        description: metadata.description,
-        image: `${imagePathPrefix}/${n}.png`,
-        attributes: attr
-      },
-      null,
-      2
+function randomAttributes(
+  random: Random,
+  config: Config
+): [number, Array<Attribute>] {
+  let score = 0;
+  const attributes = config.traitTypes.map((t) => {
+    const rarity = random.rand();
+    const traits = config.traitsByRarity(t.name, rarity.id);
+    const i = Math.floor(Math.random() * traits.length);
+    const trait = traits[i];
+    score += rarity.id;
+    return {
+      name: t.name,
+      value: path.parse(trait.image).name
+    };
+  });
+  return [score, attributes];
+}
+
+export async function createImages(): Promise<void> {
+  try {
+    const { outputDirectory, source, config } = this.opts();
+    const configuration: Config = await Config.loadFromFile(config);
+    const { imageSize, layerDirectory } = configuration;
+    const canvas = createCanvas(imageSize.width, imageSize.height);
+    const ctx = canvas.getContext('2d');
+    const collectibles: Array<Collectible> = JSON.parse(
+      (await fs.readFile(source)).toString()
     );
-    const outputFile = path.join(outputDir, `${n}`);
-    console.log(`Writing metadata ${outputFile}`);
-    await fs.writeFile(outputFile, json);
-  }
-}
-
-async function updateMetadata(
-  metadataDir: string,
-  imagePrefixPath: string
-): Promise<void> {
-  const files = await fs.readdir(metadataDir);
-  for (const f of files) {
-    const filePath = path.join(metadataDir, f);
-    const s = await fs.readFile(filePath);
-    const metadata: Metadata = JSON.parse(s.toString());
-    const { name } = path.parse(f);
-    metadata.image = `${imagePrefixPath}/${name}.png`;
-    await fs.writeFile(filePath, JSON.stringify(metadata, null, 2));
-  }
-}
-
-async function createImages(
-  collectibles: Array<Collectible>,
-  layerDir: string,
-  imageSize: ImageSize,
-  outputDir: string
-): Promise<void> {
-  const canvas = createCanvas(imageSize.width, imageSize.height);
-  const ctx = canvas.getContext('2d');
-  await fs.mkdir(outputDir, { recursive: true });
-  for (let i = 0; i < collectibles.length; i++) {
-    const c = collectibles[i];
-    for (const trait of c.traits) {
-      const image = await loadImage(
-        path.join(layerDir, trait.name, `${trait.value}.png`)
-      );
-      ctx.drawImage(image, 0, 0, image.width, image.height);
+    await fs.mkdir(outputDirectory, { recursive: true });
+    for (let i = 0; i < collectibles.length; i++) {
+      const c = collectibles[i];
+      for (const trait of c.attributes) {
+        const image = await loadImage(
+          path.join(layerDirectory, trait.name, `${trait.value}.png`)
+        );
+        ctx.drawImage(image, 0, 0, image.width, image.height);
+      }
+      const outputFile = path.join(outputDirectory, `${i + 1}.png`);
+      console.log(`Writing image ${outputFile}`);
+      await fs.writeFile(outputFile, canvas.toBuffer('image/png'));
     }
-    const outputFile = path.join(outputDir, `${i + 1}.png`);
-    console.log(`Writing image ${outputFile}`);
-    await fs.writeFile(outputFile, canvas.toBuffer('image/png'));
-  }
-}
-
-async function uploadDirectory(
-  key: string,
-  secret: string,
-  directory: string
-): Promise<string> {
-  console.log(`Uploading directory ${directory}...`);
-  const pinata = PinataSDK(key, secret);
-  const result = await pinata.pinFromFS(directory);
-  return result.IpfsHash;
-}
-
-async function readConfig(configFile: string): Promise<Config> {
-  const f = await fs.readFile(configFile);
-  return JSON.parse(f.toString());
-}
-
-async function create(): Promise<void> {
-  try {
-    const config: Config = await readConfig(this.opts().config);
-    const imagesDir = path.join(this.opts().outputDirectory, 'images');
-    const metadataDir = path.join(this.opts().outputDirectory, 'metadata');
-    const traitTypes = await createTraitTypes(
-      config,
-      this.opts().inputDirectory
-    );
-    const list = generate(this.opts().limit, traitTypes);
-    await createImages(
-      list,
-      this.opts().inputDirectory,
-      config.imageSize,
-      imagesDir
-    );
-    await createMetadata(list, '', config.metadata, metadataDir);
   } catch (error) {
-    console.log('Error generating images', error);
+    console.log(`Error creating images ${error}`);
   }
 }
 
-async function upload(): Promise<void> {
+export async function createMetadata(): Promise<void> {
   try {
-    const { apiKey, apiSecret, outputDirectory } = this.opts();
-    const imagesDir = path.join(outputDirectory, 'images');
-    const metadataDir = path.join(outputDirectory, 'metadata');
-    const imagesDirCid = await uploadDirectory(apiKey, apiSecret, imagesDir);
-    console.log(`Images directory CID: ${imagesDirCid}`);
-    await updateMetadata(
-      metadataDir,
-      `https://gateway.pinata.cloud/ipfs/${imagesDirCid}`
+    const { outputDirectory, source, config, imagePathPrefix, unrevealImage } =
+      this.opts();
+    const configuration: Config = await Config.loadFromFile(config);
+    const collectibles: Array<Collectible> = JSON.parse(
+      (await fs.readFile(source)).toString()
     );
-    const metadataDirCid = await uploadDirectory(
-      apiKey,
-      apiSecret,
-      metadataDir
-    );
-    console.log(`Metadata directory CID: ${metadataDirCid}`);
+    const { metadata } = configuration;
+    for (const c of collectibles) {
+      const attr = c.attributes.map((e) => ({
+        trait_type: e.name,
+        value: e.value
+      }));
+      const image = unrevealImage ?? `${imagePathPrefix}/${c.id}.png`;
+      const json = JSON.stringify(
+        {
+          name: `${metadata.name}${c.id}`,
+          description: metadata.description,
+          image,
+          attributes: attr
+        },
+        null,
+        2
+      );
+      await fs.mkdir(outputDirectory, { recursive: true });
+      const outputFile = path.join(outputDirectory, c.id.toString());
+      console.log(`Writing metadata ${outputFile}`);
+      await fs.writeFile(outputFile, json);
+    }
   } catch (error) {
-    console.log('Error uploading files', error);
+    console.log(`Error creating metadata ${error}`);
   }
 }
 
-const program = new Command();
-
-program
-  .name('generator')
-  .description('CLI to generate NFT images and metadata')
-  .version('0.0.1');
-
-program
-  .command('create')
-  .description('Create NFT images and metadata')
-  .requiredOption(
-    '-c, --config <file>',
-    'path to configuration file',
-    'config.json'
-  )
-  .requiredOption('-n, --limit <number>', 'number of images to create', '10')
-  .requiredOption('-o, --output-directory <dir>', 'output directory', 'build')
-  .requiredOption(
-    '-i, --input-directory <dir>',
-    'input directory contains layer images',
-    'layers'
-  )
-  .action(create);
-
-program
-  .command('upload')
-  .description('Upload NFT images and metadata to Pinata')
-  .requiredOption('-k, --api-key <string>', 'Pinata API key')
-  .requiredOption('-s, --api-secret <string>', 'Pinata API secret')
-  .requiredOption('-o, --output-directory <dir>', 'output directory', 'build')
-  .action(upload);
-
-program.parseAsync(process.argv);
+export async function uploadDirectory(): Promise<void> {
+  try {
+    const { apiKey, apiSecret, directory } = this.opts();
+    // TODO: Validate directory must not be empty
+    console.log(`Uploading directory ${directory}...`);
+    const pinata = PinataSDK(apiKey, apiSecret);
+    const result = await pinata.pinFromFS(directory);
+    console.log(`Uploaded directory CID: ${result.IpfsHash}`);
+  } catch (error) {
+    console.log(`Error uploading directory ${error}`);
+  }
+}

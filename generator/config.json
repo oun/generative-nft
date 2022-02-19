@@ -4,33 +4,272 @@
     "height": 24
   },
   "metadata": {
-    "name": "#",
+    "name": "NFT#",
     "description": "Collectible NFT"
   },
-  "layers": [
+  "rarities": [
     {
-      "name": "background"
+      "id": 1,
+      "name": "common",
+      "chance": 50
     },
     {
-      "name": "punks"
+      "id": 2,
+      "name": "uncommon",
+      "chance": 30
     },
     {
-      "name": "top"
+      "id": 3,
+      "name": "rare",
+      "chance": 15
     },
     {
-      "name": "beard"
+      "id": 4,
+      "name": "legendary",
+      "chance": 5
+    }
+  ],
+  "layerDirectory": "layers",
+  "traitTypes": [
+    {
+      "name": "background",
+      "traits": [
+        {
+          "id": 1,
+          "image": "blue.png",
+          "rarity": 1
+        },
+        {
+          "id": 2,
+          "image": "brown.png",
+          "rarity": 2
+        },
+        {
+          "id": 3,
+          "image": "green.png",
+          "rarity": 3
+        },
+        {
+          "id": 4,
+          "image": "purple.png",
+          "rarity": 4
+        }
+      ]
     },
     {
-      "name": "chain"
+      "name": "punks",
+      "traits": [
+        {
+          "id": 1,
+          "image": "alien.png",
+          "rarity": 1
+        },
+        {
+          "id": 2,
+          "image": "ape.png",
+          "rarity": 1
+        },
+        {
+          "id": 3,
+          "image": "female1.png",
+          "rarity": 1
+        },
+        {
+          "id": 4,
+          "image": "female2.png",
+          "rarity": 1
+        },
+        {
+          "id": 5,
+          "image": "female3.png",
+          "rarity": 2
+        },
+        {
+          "id": 6,
+          "image": "male1.png",
+          "rarity": 2
+        },
+        {
+          "id": 7,
+          "image": "male2.png",
+          "rarity": 2
+        },
+        {
+          "id": 8,
+          "image": "male3.png",
+          "rarity": 3
+        },
+        {
+          "id": 9,
+          "image": "male4.png",
+          "rarity": 3
+        },
+        {
+          "id": 10,
+          "image": "zombie.png",
+          "rarity": 4
+        }
+      ]
     },
     {
-      "name": "cheek"
+      "name": "top",
+      "traits": [
+        {
+          "id": 1,
+          "image": "beanie.png",
+          "rarity": 1
+        },
+        {
+          "id": 2,
+          "image": "blone_bob.png",
+          "rarity": 2
+        },
+        {
+          "id": 3,
+          "image": "blone_short.png",
+          "rarity": 3
+        },
+        {
+          "id": 4,
+          "image": "wild_blone.png",
+          "rarity": 4
+        }
+      ]
     },
     {
-      "name": "glasses"
+      "name": "beard",
+      "traits": [
+        {
+          "id": 1,
+          "image": "big_beard.png",
+          "rarity": 1
+        },
+        {
+          "id": 2,
+          "image": "chinstrap.png",
+          "rarity": 1
+        },
+        {
+          "id": 3,
+          "image": "goat.png",
+          "rarity": 2
+        },
+        {
+          "id": 4,
+          "image": "normal_beard.png",
+          "rarity": 3
+        },
+        {
+          "id": 5,
+          "image": "normal_beard_black.png",
+          "rarity": 4
+        }
+      ]
     },
     {
-      "name": "mouth"
+      "name": "chain",
+      "traits": [
+        {
+          "id": 1,
+          "image": "gold_chain.png",
+          "rarity": 1
+        },
+        {
+          "id": 2,
+          "image": "gold_chain.png",
+          "rarity": 2
+        },
+        {
+          "id": 3,
+          "image": "silver_chain.png",
+          "rarity": 3
+        },
+        {
+          "id": 4,
+          "image": "silver_chain.png",
+          "rarity": 4
+        }
+      ]
+    },
+    {
+      "name": "cheek",
+      "traits": [
+        {
+          "id": 1,
+          "image": "rosy_cheeks.png",
+          "rarity": 1
+        },
+        {
+          "id": 2,
+          "image": "rosy_cheeks.png",
+          "rarity": 2
+        },
+        {
+          "id": 3,
+          "image": "rosy_cheeks.png",
+          "rarity": 3
+        },
+        {
+          "id": 4,
+          "image": "rosy_cheeks.png",
+          "rarity": 4
+        }
+      ]
+    },
+    {
+      "name": "glasses",
+      "traits": [
+        {
+          "id": 1,
+          "image": "3D_glasses.png",
+          "rarity": 1
+        },
+        {
+          "id": 2,
+          "image": "eye_mask.png",
+          "rarity": 2
+        },
+        {
+          "id": 3,
+          "image": "small_shades.png",
+          "rarity": 3
+        },
+        {
+          "id": 4,
+          "image": "vr.png",
+          "rarity": 4
+        }
+      ]
+    },
+    {
+      "name": "mouth",
+      "traits": [
+        {
+          "id": 1,
+          "image": "buck_teeth.png",
+          "rarity": 1
+        },
+        {
+          "id": 2,
+          "image": "cigarette.png",
+          "rarity": 2
+        },
+        {
+          "id": 3,
+          "image": "medical_mask.png",
+          "rarity": 1
+        },
+        {
+          "id": 4,
+          "image": "pipe.png",
+          "rarity": 4
+        },
+        {
+          "id": 5,
+          "image": "vape.png",
+          "rarity": 3
+        }
+      ]
     }
   ]
 }

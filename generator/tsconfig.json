@@ -20,5 +20,5 @@
     "strictNullChecks": false,
     "typeRoots": ["./node_modules/@types", "./types"]
   },
-  "include": ["src/**/*", "__tests__/**/*", "cli.ts"]
+  "include": ["src/**/*", "test/**/*", "cli.ts"]
 }

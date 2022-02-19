@@ -1,12 +1,7 @@
-interface TraitType {
+interface Rarity {
+  id: number;
   name: string;
-  values: Array<string>;
-}
-
-interface Config {
-  layers: Array<Layer>;
-  metadata: Metadata;
-  imageSize: ImageSize;
+  chance: number;
 }
 
 interface Metadata {
@@ -20,16 +15,24 @@ interface ImageSize {
   height: number;
 }
 
-interface Layer {
+interface TraitType {
   name: string;
+  traits: Array<Trait>;
 }
 
 interface Trait {
+  id: number;
+  image: string;
+  rarity: number;
+}
+
+interface Attribute {
   name: string;
   value: string;
 }
 
 interface Collectible {
-  name: string;
-  traits: Array<Trait>;
+  id: number;
+  rarity: number;
+  attributes: Array<Attribute>;
 }
