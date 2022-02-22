@@ -1,21 +1,23 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/security/PullPayment.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PullPaymentUpgradeable.sol";
 
-contract NFT is ERC721, PullPayment, Ownable {
-    using Counters for Counters.Counter;
-    Counters.Counter private currentTokenId;
+contract NFT is Initializable, ERC721Upgradeable, PullPaymentUpgradeable, OwnableUpgradeable {
+    using CountersUpgradeable for CountersUpgradeable.Counter;
+    CountersUpgradeable.Counter private currentTokenId;
 
-    string public baseTokenURI;
+    string private baseTokenURI;
 
     // Constants
     uint256 private constant TOTAL_SUPPLY = 10_000;
-    uint256 private constant MINT_PRICE = 0.02 ether;
+    uint256 private constant MINT_PRICE = 0.03 ether;
 
-    constructor() ERC721("NFT Collectible", "NFC") {
+    function initialize(string memory name, string memory symbol) public initializer {
+        __ERC721_init(name, symbol);
         baseTokenURI = "";
     }
     

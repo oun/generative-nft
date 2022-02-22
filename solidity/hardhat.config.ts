@@ -4,13 +4,14 @@
 import "dotenv/config";
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
+import "@openzeppelin/hardhat-upgrades";
 import "./scripts/deploy";
 import "./scripts/mint";
 
 const { ALCHEMY_KEY, ACCOUNT_PRIVATE_KEY, ETHERSCAN_API_KEY } = process.env;
 
 export default {
-  solidity: "0.8.0",
+  solidity: "0.8.4",
   // defaultNetwork: "rinkeby",
   networks: {
     hardhat: {},
