@@ -5,9 +5,7 @@
 - NodeJS 14
 - Yarn
 
-## Usage
-
-### Setup
+## Setup
 
 Get the Alchemy API key and private key [Alchemy](https://alchemy.com/?r=23f4e0b210cffd7b) and [Etherscan](https://etherscan.io/) API key.
 
@@ -21,7 +19,8 @@ ETHERSCAN_API_KEY=<etherscan-api-key>
 
 Run `yarn install`
 
-### Deploy contract
+## Usage
+### Deploy Contract
 
 To deploy contract to the Rinkeby test network:
 
@@ -34,7 +33,7 @@ When deployment is done, take note the proxy and implementation address.
 
 Update .env file with the proxy address: `NFT_CONTRACT_ADDRESS=<proxy-address>`
 
-### Upgrade contract
+### Upgrade Contract
 
 To upgrade implementation contract:
 
@@ -42,7 +41,7 @@ To upgrade implementation contract:
 npx hardhat upgrade --network rinkeby
 ```
 
-### Verify contract
+### Verify Contract
 
 To verify contract on Etherscan, run belows command with implementation address.
 Note that the proxy contract is already verified.
@@ -59,7 +58,7 @@ To run test with hardhat test network:
 npx hardhat test
 ```
 
-## Command line reference
+## Command Reference
 
 Run `npx hardhat` to show available commands:
 

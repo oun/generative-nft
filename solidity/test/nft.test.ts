@@ -9,6 +9,7 @@ describe("NFT", () => {
     const factory = await ethers.getContractFactory("NFT");
     contract = await factory.deploy();
     await contract.deployed();
+    contract.initialize("NFT Collectibles", "NFC");
   });
 
   it("should mint a token to address", async () => {

@@ -4,9 +4,9 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PullPaymentUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract NFT is Initializable, ERC721Upgradeable, PullPaymentUpgradeable, OwnableUpgradeable {
+contract NFT is Initializable, ERC721Upgradeable, OwnableUpgradeable {
     using CountersUpgradeable for CountersUpgradeable.Counter;
     CountersUpgradeable.Counter private currentTokenId;
 
@@ -14,10 +14,11 @@ contract NFT is Initializable, ERC721Upgradeable, PullPaymentUpgradeable, Ownabl
 
     // Constants
     uint256 private constant TOTAL_SUPPLY = 10_000;
-    uint256 private constant MINT_PRICE = 0.03 ether;
+    uint256 private constant MINT_PRICE = 0.02 ether;
 
     function initialize(string memory name, string memory symbol) public initializer {
         __ERC721_init(name, symbol);
+        __Ownable_init();
         baseTokenURI = "";
     }
     
@@ -41,9 +42,5 @@ contract NFT is Initializable, ERC721Upgradeable, PullPaymentUpgradeable, Ownabl
 
     function setBaseTokenURI(string memory _baseTokenURI) public onlyOwner {
         baseTokenURI = _baseTokenURI;
-    }
-
-    function withdrawPayments(address payable payee) public override onlyOwner virtual {
-        super.withdrawPayments(payee);
     }
 }
