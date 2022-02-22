@@ -7,13 +7,13 @@
 
 ## Setup
 
-Get the Alchemy API key and private key [Alchemy](https://alchemy.com/?r=23f4e0b210cffd7b) and [Etherscan](https://etherscan.io/) API key.
+Get the [Alchemy](https://alchemy.com/?r=23f4e0b210cffd7b) API key and [Etherscan](https://etherscan.io/) API key.
+Export the private key of account used to deploy contract. [Metamask](https://metamask.zendesk.com/hc/en-us/articles/360015289632-How-to-Export-an-Account-Private-Key)
 
 Create .env file and add variables:
-
 ```
 ALCHEMY_KEY=<alchemy-key>
-ACCOUNT_PRIVATE_KEY=<alchemy-private-key>
+ACCOUNT_PRIVATE_KEY=<account-private-key>
 ETHERSCAN_API_KEY=<etherscan-api-key>
 ```
 
@@ -25,10 +25,25 @@ Run `yarn install`
 To deploy contract to the Rinkeby test network:
 
 ```bash
-npx hardhat deploy --network rinkeby
+npx hardhat deploy --network rinkeby --payees <json-file>
 ```
 
-This will deploy proxy admin, proxy and implementation contracts (more details on Openzeppelin upgradeable plugins).
+Where payees is path to JSON file contains list of payee and share to split payment.
+Example:
+```
+[
+    {
+        "payee": "0x...",
+        "share": 60
+    },
+    {
+        "payee": "0x...",
+        "share": 40
+    }
+]
+```
+
+This will deploy proxy admin, proxy and implementation contracts (more details on [Openzeppelin upgrades plugins](https://docs.openzeppelin.com/upgrades-plugins/1.x/)).
 When deployment is done, take note the proxy and implementation address.
 
 Update .env file with the proxy address: `NFT_CONTRACT_ADDRESS=<proxy-address>`
@@ -48,6 +63,30 @@ Note that the proxy contract is already verified.
 
 ```bash
 npx hardhat verify <implementation-address> --network rinkeby
+```
+
+### Mint Token
+
+To mint token(s) to an address.
+
+```bash
+npx hardhat mint --address <account-address> --quantity <number-of-tokens> --network rinkeby
+```
+
+### Set Base Token URI
+
+To set base URI of token metadata. The base-url must ends with slash.
+
+```bash
+npx hardhat set-base-token-uri --base-url <base-url>
+```
+
+### Get Token URI
+
+Get and print token metadata by token id.
+
+```bash
+npx hardhat token-uri --token-id <id>
 ```
 
 ## Test

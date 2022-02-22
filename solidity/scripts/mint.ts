@@ -4,11 +4,17 @@ import fetch from "node-fetch";
 
 task("mint", "Mints from the NFT contract")
   .addParam("address", "The address to receive a token")
+  .addParam("quantity", "Number of tokens")
   .setAction(async function (taskArguments, hre) {
     const contract = await getContract("NFT", hre);
-    const transactionResponse = await contract.mintTo(taskArguments.address, {
-      gasLimit: 500_000,
-    });
+    const transactionResponse = await contract.mintTo(
+      taskArguments.address,
+      taskArguments.quantity,
+      {
+        gasLimit: 500_000,
+        value: hre.ethers.utils.parseEther("0.02").mul(taskArguments.quantity),
+      }
+    );
     console.log(`Transaction Hash: ${transactionResponse.hash}`);
   });
 
