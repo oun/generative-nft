@@ -18,7 +18,7 @@ yarn generator -k <key> -s <secret> -d build/metadata
 yarn generator create-metadata -p ipfs://xxx -o build/metadata
 ```
 
-## Command Regerences
+## Command References
 
 ```bash
 Usage: generator [options] [command]
