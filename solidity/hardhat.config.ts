@@ -4,14 +4,27 @@
 import "dotenv/config";
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
-import "@openzeppelin/hardhat-upgrades";
+import "hardhat-gas-reporter";
 import "./scripts/deploy";
 import "./scripts/mint";
 
-const { ALCHEMY_KEY, ACCOUNT_PRIVATE_KEY, ETHERSCAN_API_KEY } = process.env;
+const {
+  ALCHEMY_KEY,
+  ACCOUNT_PRIVATE_KEY,
+  ETHERSCAN_API_KEY,
+  COIN_MARKET_CAP_KEY,
+} = process.env;
 
 export default {
-  solidity: "0.8.4",
+  solidity: {
+    version: "0.8.4",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+    },
+  },
   // defaultNetwork: "rinkeby",
   networks: {
     hardhat: {},
@@ -27,5 +40,9 @@ export default {
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
+  },
+  gasReporter: {
+    coinmarketcap: `${COIN_MARKET_CAP_KEY}`,
+    currency: "USD",
   },
 };

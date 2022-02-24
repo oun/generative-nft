@@ -15,6 +15,7 @@ Create .env file and add variables:
 ALCHEMY_KEY=<alchemy-key>
 ACCOUNT_PRIVATE_KEY=<account-private-key>
 ETHERSCAN_API_KEY=<etherscan-api-key>
+COIN_MARKET_CAP_KEY=<coinmarketcap-api-key>
 ```
 
 Run `yarn install`
@@ -43,26 +44,16 @@ Example:
 ]
 ```
 
-This will deploy proxy admin, proxy and implementation contracts (more details on [Openzeppelin upgrades plugins](https://docs.openzeppelin.com/upgrades-plugins/1.x/)).
-When deployment is done, take note the proxy and implementation address.
+When deployment is done, take note the contract address.
 
-Update .env file with the proxy address: `NFT_CONTRACT_ADDRESS=<proxy-address>`
-
-### Upgrade Contract
-
-To upgrade implementation contract:
-
-```bash
-npx hardhat upgrade --network rinkeby
-```
+Update .env file with the contract address: `NFT_CONTRACT_ADDRESS=<contract-address>`
 
 ### Verify Contract
 
-To verify contract on Etherscan, run belows command with implementation address.
-Note that the proxy contract is already verified.
+To verify contract on Etherscan, run belows command with contract address.
 
 ```bash
-npx hardhat verify <implementation-address> --network rinkeby
+npx hardhat verify <contract-address> --network rinkeby
 ```
 
 ### Mint Token

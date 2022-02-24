@@ -1,5 +1,5 @@
 {
-  "name": "nft-collection-generator",
+  "name": "nft-generator",
   "version": "1.0.0",
   "description": "Generate collection of images from multiple layers",
   "main": "index.ts",

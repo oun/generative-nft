@@ -8,14 +8,13 @@ describe("NFT", () => {
   beforeEach(async () => {
     const [owner, acct] = await ethers.getSigners();
     const factory = await ethers.getContractFactory("NFT");
-    contract = await factory.deploy();
-    await contract.deployed();
-    contract.initialize(
+    contract = await factory.deploy(
       "NFT Collectibles",
       "NFC",
       [owner.address, acct.address],
       [50, 50]
     );
+    await contract.deployed();
   });
 
   it("should mint a token to address", async () => {

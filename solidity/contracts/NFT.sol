@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/finance/PaymentSplitterUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
 
 
-contract NFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, PaymentSplitterUpgradeable {
-    using CountersUpgradeable for CountersUpgradeable.Counter;
-    CountersUpgradeable.Counter private currentTokenId;
+contract NFT is ERC721, Ownable, PaymentSplitter {
+    using Counters for Counters.Counter;
+    Counters.Counter private currentTokenId;
 
     string private baseTokenURI;
 
@@ -18,16 +17,11 @@ contract NFT is Initializable, ERC721Upgradeable, OwnableUpgradeable, PaymentSpl
     uint256 private constant TOTAL_SUPPLY = 10_000;
     uint256 private constant MINT_PRICE = 0.02 ether;
 
-    function initialize(string memory name, string memory symbol, address[] memory payees, uint256[] memory shares) public initializer {
-        __Ownable_init();
-        __ERC721_init(name, symbol);
-        __PaymentSplitter_init(payees, shares);
+    constructor(string memory name, string memory symbol, address[] memory payees, uint256[] memory shares) ERC721(name, symbol) PaymentSplitter(payees, shares) {
         baseTokenURI = "";
     }
     
-    function mintTo(address recipient, uint8 quantity)
-        public payable 
-    {
+    function mintTo(address recipient, uint8 quantity) public payable {
         uint256 tokenId = currentTokenId.current();
         require(tokenId + quantity <= TOTAL_SUPPLY, "Max supply reached");
         require(msg.value == MINT_PRICE * quantity, "Transaction value did not equal the mint price");
