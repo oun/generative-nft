@@ -1,1 +1,1 @@
-# NFT Collection Maker
+# Generative NFT

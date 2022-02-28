@@ -42,6 +42,7 @@ export default {
     apiKey: ETHERSCAN_API_KEY,
   },
   gasReporter: {
+    enabled: false,
     coinmarketcap: `${COIN_MARKET_CAP_KEY}`,
     currency: "USD",
   },
