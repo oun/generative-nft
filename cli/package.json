@@ -1,19 +1,19 @@
 {
-  "name": "nft-generator",
+  "name": "nft-cli",
   "version": "1.0.0",
-  "description": "Generate collection of images from multiple layers",
+  "description": "CLI let you generate NFT images",
   "main": "index.ts",
   "author": "Worawat Wijarn",
   "license": "MIT",
   "scripts": {
-    "generator": "ts-node src/cli.ts",
+    "generator": "ts-node src/generator.ts",
+    "signer": "ts-node src/signer.ts",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "jest"
   },
   "devDependencies": {
     "@types/jest": "^27.4.0",
     "@types/node": "^17.0.15",
-    "@types/yargs": "^17.0.8",
     "@typescript-eslint/eslint-plugin": "^5.10.2",
     "@typescript-eslint/parser": "^5.10.2",
     "eslint": "^8.8.0",
@@ -28,6 +28,7 @@
   "dependencies": {
     "@pinata/sdk": "^1.1.23",
     "canvas": "^2.9.0",
-    "commander": "^9.0.0"
+    "commander": "^9.0.0",
+    "ethers": "^5.5.4"
   }
 }
