@@ -1,5 +1,11 @@
 # NFT Smart Contract
 
+## Features
+- [x] Reduces gas fee for minting multiple tokens in a single transaction
+- [x] Support Openzeppelin payment splitter to withdraw fund
+- [x] Whitelist mint using ECDSA
+- [ ] Opensea whitelisting
+
 ## Requirements
 
 - NodeJS 14
@@ -12,6 +18,7 @@ Export the private key of account used to deploy contract. [Metamask](https://me
 
 Create .env file and add variables:
 ```
+NETWORK=<network>
 ALCHEMY_KEY=<alchemy-key>
 ACCOUNT_PRIVATE_KEY=<account-private-key>
 ETHERSCAN_API_KEY=<etherscan-api-key>
@@ -26,7 +33,7 @@ Run `yarn install`
 To deploy contract to the Rinkeby test network:
 
 ```bash
-npx hardhat deploy --network rinkeby --payees <json-file>
+npx hardhat deploy --name <name> --symbol <symbol> --payees <file>
 ```
 
 Where payees is path to JSON file contains list of payee and share to split payment.
@@ -53,7 +60,7 @@ Update .env file with the contract address: `NFT_CONTRACT_ADDRESS=<contract-addr
 To verify contract on Etherscan, run belows command with contract address.
 
 ```bash
-npx hardhat verify <contract-address> --network rinkeby
+npx hardhat verify --name <name> --symbol <symbol> --payees <file> --network rinkeby <contract-address>
 ```
 
 ### Mint Token
@@ -61,7 +68,15 @@ npx hardhat verify <contract-address> --network rinkeby
 To mint token(s) to an address.
 
 ```bash
-npx hardhat mint --address <account-address> --quantity <number-of-tokens> --network rinkeby
+npx hardhat mint --address <account-address> --quantity <number-of-tokens> --price <token-price> --network rinkeby
+```
+
+### Redeem Token
+
+To redeem token(s) to whitelist address.
+
+```bash
+npx hardhat redeem --address <account-address> --quantity <number-of-tokens> --price <token-price> --signature <signature> --network rinkeby
 ```
 
 ### Set Base Token URI
@@ -69,7 +84,7 @@ npx hardhat mint --address <account-address> --quantity <number-of-tokens> --net
 To set base URI of token metadata. The base-url must ends with slash.
 
 ```bash
-npx hardhat set-base-token-uri --base-url <base-url>
+npx hardhat set-base-token-uri <base-url>
 ```
 
 ### Get Token URI
@@ -77,7 +92,15 @@ npx hardhat set-base-token-uri --base-url <base-url>
 Get and print token metadata by token id.
 
 ```bash
-npx hardhat token-uri --token-id <id>
+npx hardhat token-uri <id>
+```
+
+### Set Signer Address
+
+To set signer address for signature verfication.
+
+```bash
+npx hardhat set-signer-address <address>
 ```
 
 ## Test

@@ -7,6 +7,7 @@ import "@nomiclabs/hardhat-waffle";
 import "hardhat-gas-reporter";
 import "./scripts/deploy";
 import "./scripts/mint";
+import "./scripts/misc";
 
 const {
   ALCHEMY_KEY,
@@ -25,7 +26,6 @@ export default {
       },
     },
   },
-  // defaultNetwork: "rinkeby",
   networks: {
     hardhat: {},
     rinkeby: {

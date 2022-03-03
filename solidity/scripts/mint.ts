@@ -1,10 +1,10 @@
 import { task } from "hardhat/config";
 import { getContract } from "./helpers";
-import fetch from "node-fetch";
 
 task("mint", "Mints from the NFT contract")
   .addParam("address", "The address to receive a token")
   .addParam("quantity", "Number of tokens")
+  .addParam("price", "Mint price per token")
   .setAction(async function (taskArguments, hre) {
     const contract = await getContract("NFT", hre);
     const transactionResponse = await contract.mintTo(
@@ -12,42 +12,28 @@ task("mint", "Mints from the NFT contract")
       taskArguments.quantity,
       {
         gasLimit: 500_000,
-        value: hre.ethers.utils.parseEther("0.02").mul(taskArguments.quantity),
+        value: hre.ethers.utils.parseEther(taskArguments.price).mul(taskArguments.quantity),
       }
     );
     console.log(`Transaction Hash: ${transactionResponse.hash}`);
   });
 
-task(
-  "set-base-token-uri",
-  "Sets the base token URI for the deployed smart contract"
-)
-  .addParam("baseUrl", "The base of the tokenURI endpoint to set")
+task("redeem", "Redeems from the NFT contract")
+  .addParam("address", "The address to receive a token")
+  .addParam("quantity", "Number of tokens")
+  .addParam("price", "Mint price per token")
+  .addParam("signature", "Signed address")
   .setAction(async function (taskArguments, hre) {
     const contract = await getContract("NFT", hre);
-    const transactionResponse = await contract.setBaseTokenURI(
-      taskArguments.baseUrl,
+    const transactionResponse = await contract.redeemTo(
+      taskArguments.address,
+      taskArguments.quantity,
+      taskArguments.signature,
       {
         gasLimit: 500_000,
+        value: hre.ethers.utils.parseEther(taskArguments.price).mul(taskArguments.quantity),
       }
     );
     console.log(`Transaction Hash: ${transactionResponse.hash}`);
   });
 
-task("token-uri", "Fetches the token metadata for the given token ID")
-  .addParam("tokenId", "The tokenID to fetch metadata for")
-  .setAction(async function (taskArguments, hre) {
-    const contract = await getContract("NFT", hre);
-    const response = await contract.tokenURI(taskArguments.tokenId, {
-      gasLimit: 500_000,
-    });
-
-    const metadata_url = response;
-    console.log(`Metadata URL: ${metadata_url}`);
-
-    const res = await fetch(metadata_url);
-    const metadata = await res.json();
-    console.log(
-      `Metadata fetch response: ${JSON.stringify(metadata, null, 2)}`
-    );
-  });
