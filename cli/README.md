@@ -1,29 +1,149 @@
-# NFT Generator
+# NFT CLI
 
-CLI to generate NFT images and metadata
+CLI let you generate NFT images and metada, upload them to Pinata
 
-## Requirements
+## Getting Started
+### Prerequisites
 
 - NodeJS 14
 - Yarn
+- Pinata API key
+
+### Installation
+
+1. Install NPM packages: `yarn install`
+2. Sign up [Pinata](https://www.pinata.cloud/) account and get API key
+3. Create configuration file e.g. `config.json`
+4. Create directory containing trait images
+
+Sample config.json
+```json
+{
+  "imageSize": {
+    "width": 500,
+    "height": 500
+  },
+  "metadata": {
+    "name": "NFT #",
+    "description": "Really cool randomly generated NFT images"
+  },
+  "rarities": [
+    {
+      "id": 1,
+      "name": "common",
+      "chance": 50
+    },
+    {
+      "id": 2,
+      "name": "uncommon",
+      "chance": 30
+    },
+    {
+      "id": 3,
+      "name": "rare",
+      "chance": 15
+    },
+    {
+      "id": 4,
+      "name": "legendary",
+      "chance": 5
+    }
+  ],
+  "layerDirectory": "layers",
+  "traitTypes": [
+    {
+      "name": "trait_1",
+      "traits": [
+        {
+          "id": 1,
+          "image": "trait_value1.png",
+          "rarity": 1
+        },
+        {
+          "id": 2,
+          "image": "trait_value2.png",
+          "rarity": 2
+        },
+        {
+          "id": 3,
+          "image": "trait_value3.png",
+          "rarity": 3
+        }
+      ]
+    },
+    {
+      "name": "trait_2",
+      "traits": [
+        {
+          "id": 1,
+          "image": "trait_value4.png",
+          "rarity": 1
+        },
+        {
+          "id": 2,
+          "image": "trait_value5.png",
+          "rarity": 1
+        },
+        {
+          "id": 3,
+          "image": "trait_value6.png",
+          "rarity": 1
+        }
+      ]
+    }
+  ]
+}
+```
+Sample trait image directories:
+```
+project
+│
+└───layers
+    │
+    └───trait_1
+    │      trait_value1.png
+    │      trait_value2.png
+    │      trait_value3.png
+    │   
+    └───trait_2
+           trait_value4.png
+           trait_value5.png
+           trait_value6.png
+```
 
 ## Usage
 
+Generate random 100 items and write to build/collectibles.json file that contains configuration used to create image and metadata.
 ```bash
-yarn generator generate -n 20
-yarn generator create-images -o build/images
-yarn generator -k <key> -s <secret> -d build/images
-yarn generator create-metadata -u ipfs://xxx -o build/metadata
-yarn generator -k <key> -s <secret> -d build/metadata
-yarn generator create-metadata -p ipfs://xxx -o build/metadata
+yarn cli generate -n 100
+```
+
+Create images and save to build/images directory
+```bash
+yarn cli create-images
+```
+
+Create unrevealed metadata using image path ipfs://xxx/unreveal.png and save to build/metadata directory
+```bash
+yarn cli create-metadata -u -p ipfs://xxx/unreveal.png
+```
+
+Upload unrevealed metadata to Pinata service
+```bash
+yarn cli upload-dir -k <key> -s <secret> -d build/metadata
+```
+
+Create revealed metadata using image path prefix ipfs://xxx and save to build/metadata directory
+```bash
+yarn cli create-metadata -p ipfs://xxx
 ```
 
 ## Command References
 
 ```bash
-Usage: generator [options] [command]
+Usage: cli [options] [command]
 
-CLI to generate NFT images and metadata
+NFT CLI utilities
 
 Options:
   -V, --version              output the version number
@@ -34,12 +154,14 @@ Commands:
   create-images [options]    Create NFT images
   create-metadata [options]  Create metadata
   upload-dir [options]       Upload directory to Pinata
+  sign [options]             Sign account addresses
   help [command]             display help for command
 ```
 
 ### Generate Command
+
 ```bash
-Usage: generator generate [options]
+Usage: cli generate [options]
 
 Generate collectibles
 
@@ -53,7 +175,7 @@ Options:
 ### Create Images Command
 
 ```bash
-Usage: generator create-images [options]
+Usage: cli create-images [options]
 
 Create NFT images
 
@@ -65,23 +187,25 @@ Options:
 ```
 
 ### Create Metadata Command
+
 ```bash
-Usage: generator create-metadata [options]
+Usage: cli create-metadata [options]
 
 Create metadata
 
 Options:
-  -c, --config <file>             path to configuration file (default: "config.json")
-  -s, --source <file>             path to generated collectibles file (default: "build/collectibles.json")
-  -h, --unreveal-image <file>     path to unreveal image
-  -p, --image-path-prefix <path>  path prefix to image (default: "ipfs://xxx/")
-  -o, --output-directory <dir>    output directory
-  --help                          display help for command
+  -c, --config <file>           path to configuration file (default: "config.json")
+  -s, --source <file>           path to generated collectibles file (default: "build/collectibles.json")
+  -u, --unreveal                unreveal flag
+  -p, --image-path <path>       if unreveal flag is true, this is full path to unrevealed image. Otherwise path prefix to image
+  -o, --output-directory <dir>  output directory (default: "build/metadata")
+  -h, --help                    display help for command
 ```
 
 ### Upload Directory Command
+
 ```bash
-Usage: generator upload-dir [options]
+Usage: cli upload-dir [options]
 
 Upload directory to Pinata
 
@@ -90,4 +214,18 @@ Options:
   -s, --api-secret <string>  Pinata API secret
   -d, --directory <dir>      directory to upload
   -h, --help                 display help for command
+```
+
+### Sign Accounts Command
+
+```bash
+Usage: cli sign [options]
+
+Sign account addresses
+
+Options:
+  -i, --input <file>          input file path containing addresses
+  -k, --private-key <string>  private key used for signing message
+  -o, --output <file>         output file path containing list of signed message (default: "signatures.json")
+  -h, --help                  display help for command
 ```

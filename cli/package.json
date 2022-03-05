@@ -6,8 +6,7 @@
   "author": "Worawat Wijarn",
   "license": "MIT",
   "scripts": {
-    "generator": "ts-node src/generator.ts",
-    "signer": "ts-node src/signer.ts",
+    "cli": "ts-node src/cli.ts",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "jest"
   },

@@ -1,29 +1,28 @@
-import { Command } from "commander";
-import { sign } from "./main";
+import { ethers } from "ethers";
+import fs from 'fs/promises';
 
-const program = new Command();
+export async function sign(): Promise<void> {
+  try {
+    const { privateKey, input, output } = this.opts();
+    console.log(`Reading addresses from: ${input}`);
+    const wallet = new ethers.Wallet(privateKey);
+    const signatures = [];
+    for (const account of await readAccountsFromFile(input)) {
+      const hash = Buffer.from(
+        ethers.utils.solidityKeccak256(['address'], [account]).slice(2),
+        'hex'
+      );
+      const signature = await wallet.signMessage(hash);
+      signatures.push(signature);
+    }
+    console.log(`Writing signatures to: ${output}`);
+    await fs.writeFile(output, JSON.stringify(signatures, null, 2));
+  } catch (error) {
+    console.log(`Error signing pass:`, error);
+  }
+}
 
-program
-  .name("signer")
-  .description("CLI to sign pass for whitelist minting")
-  .version("0.0.1");
-
-program
-  .command("sign")
-  .description("Sign account addresses")
-  .requiredOption(
-    "-i, --input <file>",
-    "input file path containing addresses"
-  )
-  .requiredOption(
-    "-k, --private-key <string>",
-    "private key used for signing message"
-  )
-  .requiredOption(
-    "-o, --output <file>",
-    "output file path containing list of signed message",
-    "signatures.json"
-  )
-  .action(sign);
-
-program.parseAsync(process.argv);
+async function readAccountsFromFile(inputFile: string): Promise<Array<string>> {
+  const raw = await fs.readFile(inputFile);
+  return JSON.parse(raw.toString()) as Array<string>;
+}
