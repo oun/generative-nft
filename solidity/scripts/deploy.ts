@@ -14,6 +14,7 @@ task("check-balance", "Prints out the balance of your account").setAction(
 task("deploy", "Deploys the NFT contract")
   .addParam("name", "Token name")
   .addParam("symbol", "Token symbol")
+  .addParam("saleStartTime", "Public sale start timestamp")
   .addParam(
     "payees",
     "Path to JSON file contains list of payee and share to split payment"
@@ -26,6 +27,7 @@ task("deploy", "Deploys the NFT contract")
     const instance = await nft.deploy(
       taskArguments.name,
       taskArguments.symbol,
+      taskArguments.saleStartTime,
       payees.map((o) => o.payee),
       payees.map((o) => o.share)
     );
@@ -35,6 +37,7 @@ task("deploy", "Deploys the NFT contract")
 task("verify", "Verify the NFT contract")
   .addOptionalParam("name", "Token name")
   .addOptionalParam("symbol", "Token symbol")
+  .addOptionalParam("saleStartTime", "Public sale start timestamp")
   .addOptionalParam(
     "payees",
     "Path to JSON file contains list of payee and share to split payment"
@@ -48,6 +51,7 @@ task("verify", "Verify the NFT contract")
       constructorArguments: [
         taskArguments.name,
         taskArguments.symbol,
+        taskArguments.saleStartTime,
         payees.map((o) => o.payee),
         payees.map((o) => o.share),
       ],
