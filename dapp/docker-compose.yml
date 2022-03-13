@@ -1,0 +1,27 @@
+version: "3"
+services:
+  dapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dapp
+    restart: always
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - 3000:3000
+    depends_on:
+      - postgres
+  postgres:
+    container_name: postgres
+    image: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - ./docker/volumes/postgres/dapp:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=dapp
+      - POSTGRES_USER=nft
+      - POSTGRES_PASSWORD=1234
