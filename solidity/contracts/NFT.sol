@@ -13,7 +13,7 @@ contract NFT is ERC721E, Ownable, Pausable, PaymentSplitter {
     uint256 private _saleStartTime;
 
     // Constants
-    uint256 private constant TOTAL_SUPPLY = 8_888;
+    uint256 private constant MAX_SUPPLY = 8_888;
     uint256 private constant MINT_PRICE = 0.02 ether;
     uint256 private constant REDEEM_PRICE = 0.01 ether;
     uint256 private constant MAX_MINT_PER_ADDRESS = 5;
@@ -44,7 +44,7 @@ contract NFT is ERC721E, Ownable, Pausable, PaymentSplitter {
     }
 
     function _mintTo(address recipient, uint8 quantity) internal virtual {
-        require(totalSupply() + quantity <= TOTAL_SUPPLY, "Max supply reached");
+        require(totalSupply() + quantity <= MAX_SUPPLY, "Max supply reached");
         require(_mintAmountOf(msg.sender) + quantity <= MAX_MINT_PER_ADDRESS, "Exceed mint limit per address");
 
         _safeMint(recipient, quantity);
