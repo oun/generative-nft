@@ -1,69 +1,72 @@
-import { ethers } from "ethers";
-import type { NextPage } from "next";
+import type { GetStaticProps, NextPage } from "next";
 import Head from "next/head";
-import { useState } from "react";
-import useConfig from "../hooks/useconfig";
+import Mint from "../components/Mint";
+import Redeem from "../components/Redeem";
+import Wallet from "../components/Wallet";
+import contract from "../contracts/NFT.json";
+import { useTokenBalance } from "../hooks/useContract";
 
-const Home: NextPage = () => {
-  const [account, setAccount] = useState();
-  const { config, error } = useConfig();
+interface Props {
+  contractInterface: any;
+  contractAddress: string;
+  maxSupply: number;
+  maxMintPerAccount: number;
+  maxWhitelistMintPerAccount: number;
+  publicMintPrice: number;
+  whitelistMintPrice: number;
+  whitelistSale: boolean;
+  publicSale: boolean;
+}
 
-  const connectWallet = async () => {
-    try {
-      if (!window.ethereum) {
-        console.log("Metamask not detected");
-        return;
-      }
-      let chainId = await window.ethereum.request({ method: "eth_chainId" });
-      console.log("Connected to chain:" + chainId);
+const Home: NextPage<Props> = ({
+  contractInterface,
+  contractAddress,
+  maxSupply,
+  maxMintPerAccount,
+  maxWhitelistMintPerAccount,
+  publicMintPrice,
+  whitelistMintPrice,
+  whitelistSale,
+  publicSale,
+}) => {
+  const [balance, mint, redeem] = useTokenBalance(
+    contractAddress,
+    contractInterface
+  );
 
-      const rinkebyChainId = "0x4";
-      const devChainId = 1337;
-      const localChainId = `0x${devChainId.toString(16)}`;
-
-      if (chainId !== rinkebyChainId && chainId !== localChainId) {
-        alert("You are not connected to the Rinkeby Testnet!");
-        return;
-      }
-
-      const [account] = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-
-      console.log("Found account", account);
-      setAccount(account);
-    } catch (error) {
-      console.log("Error connecting to Wallet");
-    }
+  const onMint = async (quantity: number) => {
+    return await mint(quantity, publicMintPrice);
   };
 
-  const mint = async () => {
-    try {
-      if (!window.ethereum) {
-        console.log("Metamask not detected");
-        return;
-      }
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(
-        config.contract.address,
-        config.contract.abi,
-        signer
+  const onWhitelistMint = async (quantity: number, signature: string) => {
+    return await redeem(quantity, whitelistMintPrice, signature);
+  };
+
+  const renderMintButton = () => {
+    if (publicSale) {
+      return (
+        <Mint
+          balance={balance}
+          contractAddress={contractAddress}
+          contractInterface={contractInterface}
+          maxMintPerAccount={maxMintPerAccount}
+          mintPrice={publicMintPrice}
+          maxSupply={maxSupply}
+          onSubmit={onMint}
+        />
       );
-      const tx = await contract.mintTo(account, 1, {
-        value: ethers.utils.parseEther("0.02"),
-      });
-      console.log("Mining....", tx.hash);
-      const receipt = await tx.wait();
-      console.log("Mined!", receipt);
-      const event = receipt.events[0];
-      const value = event.args[2];
-      const tokenId = value.toNumber();
-      console.log(
-        `Mined, see transaction: https://rinkeby.etherscan.io/tx/${tx.hash}`
+    } else if (whitelistSale) {
+      return (
+        <Redeem
+          balance={balance}
+          contractAddress={contractAddress}
+          contractInterface={contractInterface}
+          maxMintPerAccount={maxWhitelistMintPerAccount}
+          mintPrice={whitelistMintPrice}
+          maxSupply={maxSupply}
+          onSubmit={onWhitelistMint}
+        />
       );
-    } catch (error) {
-      console.log("Error minting", error);
     }
   };
 
@@ -75,45 +78,59 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <header className="flex p-4">
+      <header className="grid p-4 grid-rows-1 grid-cols-3">
         <div className="text-lg justify-center items-center text-white">
           NFT Logo
         </div>
-        <nav className="text-lg flex grow justify-end items-center gap-4 text-white">
-          <a href="#">About</a>
+        <nav className="text-lg flex grow justify-center items-center gap-4 text-white">
+          <a href="#about">About</a>
+          <a href="#mint">Mint</a>
           <a href="#">Collection</a>
           <a href="#">Team</a>
         </nav>
+        <div className="flex justify-end">
+          <div className="text-lg justify-center items-center text-white">
+            <Wallet />
+          </div>
+        </div>
       </header>
 
-      <main className="flex grow">
-        <section className="flex flex-col items-center justify-center w-full">
+      <main className="flex-col">
+        <section
+          id="about"
+          className="flex flex-col items-center justify-center min-h-screen"
+        >
           <h1 className="text-5xl text-white p-2">Welcome to NFT</h1>
           <div className="text-lg text-white p-4 w-1/3 text-center">
-            5,555 unique collectible with proof of ownership stored on the
+            {maxSupply} unique collectible with proof of ownership stored on the
             Ethereum blockchain.
           </div>
-          <div className="m-4">
-            {account ? (
-              <button
-                className="text-lg bg-white py-4 px-8 rounded-xl"
-                onClick={mint}
-              >
-                Buy NFT
-              </button>
-            ) : (
-              <button
-                className="text-lg bg-white p-4 rounded-xl"
-                onClick={connectWallet}
-              >
-                Connect Wallet
-              </button>
-            )}
-          </div>
+        </section>
+        <section
+          id="mint"
+          className="flex flex-col items-center justify-center min-h-screen"
+        >
+          <div className="">{renderMintButton()}</div>
         </section>
       </main>
     </div>
   );
+};
+
+export const getStaticProps: GetStaticProps = async () => {
+  return {
+    props: {
+      contractInterface: contract.abi,
+      contractAddress: process.env.NFT_CONTRACT_ADDRESS!,
+      maxSupply: +process.env.MAX_SUPPLY!,
+      maxMintPerAccount: +process.env.MAX_MINT_PER_ACCOUNT!,
+      maxWhitelistMintPerAccount: +process.env.MAX_WHITELIST_MINT_PER_ACCOUNT!,
+      publicMintPrice: +process.env.PUBLIC_MINT_PRICE!,
+      whitelistMintPrice: +process.env.WHITELIST_MINT_PRICE!,
+      whitelistSale: process.env.WHITELIST_SALE === "true",
+      publicSale: process.env.PUBLIC_SALE === "true",
+    },
+  };
 };
 
 export default Home;
