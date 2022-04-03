@@ -13,7 +13,7 @@ export async function sign(): Promise<void> {
         'hex'
       );
       const signature = await wallet.signMessage(hash);
-      signatures.push(signature);
+      signatures.push({ account, signature });
     }
     console.log(`Writing signatures to: ${output}`);
     await fs.writeFile(output, JSON.stringify(signatures, null, 2));
