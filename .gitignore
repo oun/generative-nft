@@ -129,7 +129,4 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-artifacts
-cache
-.openzeppelin/
 .DS_Store

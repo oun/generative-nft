@@ -1,59 +1,79 @@
 import fs from "fs/promises";
+import { parse } from "csv-parse/sync";
 import { task } from "hardhat/config";
-import { getAccount } from "./helpers";
-
-task("check-balance", "Prints out the balance of your account").setAction(
-  async function (taskArguments, hre) {
-    const account = getAccount();
-    console.log(
-      `Account balance for ${account.address}: ${await account.getBalance()}`
-    );
-  }
-);
 
 task("deploy", "Deploys the NFT contract")
-  .addParam("name", "Token name")
-  .addParam("symbol", "Token symbol")
-  .addParam("saleStartTime", "Public sale start timestamp")
+  .addParam("signerAddress", "Signer address")
+  .addParam("publicSaleStartTime", "Public sale start timestamp (seconds)")
   .addParam(
-    "payees",
-    "Path to JSON file contains list of payee and share to split payment"
+    "whitelistSaleStartTime",
+    "Whitelist sale start timestamp (seconds)"
+  )
+  .addParam("publicMintPrice", "Public mint price")
+  .addParam("presaleMintPrice", "Presale mint price")
+  .addParam(
+    "payments",
+    "Path to CSV file contains list of payees and percent share for split payment"
   )
   .setAction(async function (taskArguments, hre) {
-    const content = await fs.readFile(taskArguments.payees);
-    const payees: Array<any> = JSON.parse(content.toString());
+    const content = await fs.readFile(taskArguments.payments);
+    const payees: string[][] = parse(content);
 
-    const nft = await hre.ethers.getContractFactory("NFT", getAccount());
+    const nft = await hre.ethers.getContractFactory("NFT");
     const instance = await nft.deploy(
-      taskArguments.name,
-      taskArguments.symbol,
-      taskArguments.saleStartTime,
-      payees.map((o) => o.payee),
-      payees.map((o) => o.share)
+      taskArguments.signerAddress,
+      {
+        publicSaleStartTime: taskArguments.publicSaleStartTime,
+        whitelistSaleStartTime: taskArguments.whitelistSaleStartTime,
+        publicMintPrice: hre.ethers.utils.parseEther(
+          taskArguments.publicMintPrice
+        ),
+        presaleMintPrice: hre.ethers.utils.parseEther(
+          taskArguments.presaleMintPrice
+        ),
+      },
+      payees.map((o) => o[0]),
+      payees.map((o) => +o[1])
     );
     console.log(`Contract deployed to address: ${instance.address}`);
   });
 
 task("verify", "Verify the NFT contract")
-  .addOptionalParam("name", "Token name")
-  .addOptionalParam("symbol", "Token symbol")
-  .addOptionalParam("saleStartTime", "Public sale start timestamp")
+  .addOptionalParam("signerAddress", "Signer address")
   .addOptionalParam(
-    "payees",
-    "Path to JSON file contains list of payee and share to split payment"
+    "publicSaleStartTime",
+    "Public sale start timestamp (seconds)"
+  )
+  .addOptionalParam(
+    "whitelistSaleStartTime",
+    "Whitelist sale start timestamp (seconds)"
+  )
+  .addOptionalParam("publicMintPrice", "Public mint price")
+  .addOptionalParam("presaleMintPrice", "Presale mint price")
+  .addOptionalParam(
+    "payments",
+    "Path to CSV file contains list of payees and percent share for split payment"
   )
   .setAction(async function (taskArguments, hre) {
-    const content = await fs.readFile(taskArguments.payees);
-    const payees: Array<any> = JSON.parse(content.toString());
+    const content = await fs.readFile(taskArguments.payments);
+    const payees: string[][] = parse(content);
 
     await hre.run("verify:verify", {
       address: taskArguments.address,
       constructorArguments: [
-        taskArguments.name,
-        taskArguments.symbol,
-        taskArguments.saleStartTime,
-        payees.map((o) => o.payee),
-        payees.map((o) => o.share),
+        taskArguments.signerAddress,
+        {
+          publicSaleStartTime: taskArguments.publicSaleStartTime,
+          whitelistSaleStartTime: taskArguments.whitelistSaleStartTime,
+          publicMintPrice: hre.ethers.utils.parseEther(
+            taskArguments.publicMintPrice
+          ),
+          presaleMintPrice: hre.ethers.utils.parseEther(
+            taskArguments.presaleMintPrice
+          ),
+        },
+        payees.map((o) => o[0]),
+        payees.map((o) => +o[1]),
       ],
     });
   });

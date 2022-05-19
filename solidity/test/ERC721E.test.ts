@@ -141,7 +141,9 @@ describe("ERC721E", () => {
     let receiver: Contract;
     const receiverMagicValue = "0x150b7a02";
     beforeEach(async () => {
-      const ERC721ReceiverMock = await ethers.getContractFactory("ERC721ReceiverMock");
+      const ERC721ReceiverMock = await ethers.getContractFactory(
+        "ERC721ReceiverMock"
+      );
       receiver = await ERC721ReceiverMock.deploy("0x150b7a02");
       await receiver.deployed();
     });
@@ -161,7 +163,13 @@ describe("ERC721E", () => {
       it("emit Received event", async () => {
         await expect(tx)
           .to.emit(receiver, "Received")
-          .withArgs(owner.address, ethers.constants.AddressZero, 4, "0x", 20000);
+          .withArgs(
+            owner.address,
+            ethers.constants.AddressZero,
+            4,
+            "0x",
+            20000
+          );
       });
 
       it("owner has token", async () => {
