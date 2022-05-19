@@ -1,5 +1,4 @@
 interface Rarity {
-  id: number;
   name: string;
   chance: number;
 }
@@ -10,29 +9,54 @@ interface Metadata {
   image: string;
 }
 
-interface ImageSize {
-  width: number;
-  height: number;
+interface TraitTypeRule {
+  name: string;
+  chance?: number;
+  rarities?: Rarity[];
+  requires?: RequireRule[];
+  affinities?: AffinityRule[];
 }
 
-interface TraitType {
+interface TraitRule {
   name: string;
-  traits: Array<Trait>;
+  type: string;
+  order?: Record<string, string>;
 }
 
 interface Trait {
-  id: number;
-  image: string;
-  rarity: number;
+  name: string;
+  type: string;
+  rarity?: string;
+  labels?: string[];
+}
+
+interface RequireRule {
+  value: string[];
+  type: string;
+}
+
+interface AffinityRule {
+  exist: boolean;
+  type: string;
+}
+
+interface TraitAffinity {
+  exist: boolean;
+  labels: string[];
 }
 
 interface Attribute {
   name: string;
+  rarity: string;
   value: string;
 }
 
 interface Collectible {
   id: number;
-  rarity: number;
-  attributes: Array<Attribute>;
+  attributes: Attribute[];
+}
+
+interface ImageInfo {
+  name: string;
+  labels: string[];
 }

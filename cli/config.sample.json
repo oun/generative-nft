@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "name": "NFT ",
+    "description": "Sample NFT"
+  },
+  "types": [
+    {
+      "name": "background",
+      "rarities": [
+        {
+          "name": "common",
+          "chance": 40
+        },
+        {
+          "name": "uncommon",
+          "chance": 34
+        },
+        {
+          "name": "rare",
+          "chance": 20
+        },
+        {
+          "name": "exotic",
+          "chance": 5
+        },
+        {
+          "name": "legendary",
+          "chance": 1
+        }
+      ]
+    },
+    {
+      "name": "body",
+      "affinities": [
+        {
+          "type": "background",
+          "exist": false
+        }
+      ]
+    },
+    {
+      "name": "clothes",
+      "chance": 40
+    },
+    {
+      "name": "eyes"
+    },
+    {
+      "name": "eyebrow"
+    },
+    {
+      "name": "mouth"
+    },
+    {
+      "name": "glasses",
+      "chance": 50,
+      "affinities": [
+        {
+          "type": "body",
+          "exist": false
+        }
+      ]
+    },
+    {
+      "name": "headgear",
+      "chance": 40,
+      "affinities": [
+        {
+          "type": "body",
+          "exist": false
+        }
+      ]
+    }
+  ],
+  "rarities": [
+    {
+      "name": "common",
+      "chance": 50
+    },
+    {
+      "name": "uncommon",
+      "chance": 29
+    },
+    {
+      "name": "rare",
+      "chance": 15
+    },
+    {
+      "name": "exotic",
+      "chance": 5
+    },
+    {
+      "name": "legendary",
+      "chance": 1
+    }
+  ]
+}

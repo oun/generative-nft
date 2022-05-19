@@ -14,128 +14,56 @@ CLI let you generate NFT images and metada, upload them to Pinata
 1. Install NPM packages: `yarn install`
 2. Sign up [Pinata](https://www.pinata.cloud/) account and get API key
 3. Create configuration file e.g. `config.json`
-4. Create directory containing trait images
-
-Sample config.json
-```json
-{
-  "imageSize": {
-    "width": 500,
-    "height": 500
-  },
-  "metadata": {
-    "name": "NFT #",
-    "description": "Really cool randomly generated NFT images"
-  },
-  "rarities": [
-    {
-      "id": 1,
-      "name": "common",
-      "chance": 50
-    },
-    {
-      "id": 2,
-      "name": "uncommon",
-      "chance": 30
-    },
-    {
-      "id": 3,
-      "name": "rare",
-      "chance": 15
-    },
-    {
-      "id": 4,
-      "name": "legendary",
-      "chance": 5
-    }
-  ],
-  "layerDirectory": "layers",
-  "traitTypes": [
-    {
-      "name": "trait_1",
-      "traits": [
-        {
-          "id": 1,
-          "image": "trait_value1.png",
-          "rarity": 1
-        },
-        {
-          "id": 2,
-          "image": "trait_value2.png",
-          "rarity": 2
-        },
-        {
-          "id": 3,
-          "image": "trait_value3.png",
-          "rarity": 3
-        }
-      ]
-    },
-    {
-      "name": "trait_2",
-      "traits": [
-        {
-          "id": 1,
-          "image": "trait_value4.png",
-          "rarity": 1
-        },
-        {
-          "id": 2,
-          "image": "trait_value5.png",
-          "rarity": 1
-        },
-        {
-          "id": 3,
-          "image": "trait_value6.png",
-          "rarity": 1
-        }
-      ]
-    }
-  ]
-}
-```
-Sample trait image directories:
-```
-project
-│
-└───layers
-    │
-    └───trait_1
-    │      trait_value1.png
-    │      trait_value2.png
-    │      trait_value3.png
-    │   
-    └───trait_2
-           trait_value4.png
-           trait_value5.png
-           trait_value6.png
-```
+4. Create directory for all trait images
 
 ## Usage
 
-Generate random 100 items and write to build/collectibles.json file that contains configuration used to create image and metadata.
+### Generate images
+
+1. Generate random 100 items and write to build/collectibles.json file that will be used to create image and metadata.
 ```bash
 yarn cli generate -n 100
 ```
 
-Create images and save to build/images directory
+2. Create images in build/images directory
 ```bash
 yarn cli create-images
 ```
 
-Create unrevealed metadata using image path ipfs://xxx/unreveal.png and save to build/metadata directory
+### Pre-reveal
+
+1. Upload pre-reveal image to Pinata 
 ```bash
-yarn cli create-metadata -u -p ipfs://xxx/unreveal.png
+yarn cli upload -k <key> -s <secret> -f build/images/prereveal.png
+``` 
+
+2. Create metadata for pre-reveal image using image url https://gateway.pinata.cloud/ipfs/<cid> in build/metadata directory.
+   Where <cid> is content identifier for the uploaded pre-reveal image in step 1.
+```bash
+yarn cli create-prereveal-metadata -p https://gateway.pinata.cloud/ipfs/<cid>
 ```
 
-Upload unrevealed metadata to Pinata service
+3. Upload pre-reveal metadata to Pinata service
 ```bash
-yarn cli upload-dir -k <key> -s <secret> -d build/metadata
+yarn cli upload -k <key> -s <secret> -f build/metadata
 ```
 
-Create revealed metadata using image path prefix ipfs://xxx and save to build/metadata directory
+### Post-reveal
+
+1. Upload post-reveal images in build/images directory to Pinata 
 ```bash
-yarn cli create-metadata -p ipfs://xxx
+yarn cli upload -k <key> -s <secret> -f build/images
+``` 
+
+2. Create metadata using image url prefix https://gateway.pinata.cloud/ipfs/<cid> in build/metadata directory.
+   Where <cid> is content identifier for the uploaded directory in step 1.
+```bash
+yarn cli create-metadata -p https://gateway.pinata.cloud/ipfs/<cid>
+```
+
+3. Upload metadata to Pinata service
+```bash
+yarn cli upload -k <key> -s <secret> -f build/metadata
 ```
 
 ## Command References
@@ -146,16 +74,16 @@ Usage: cli [options] [command]
 NFT CLI utilities
 
 Options:
-  -V, --version              output the version number
-  -h, --help                 display help for command
+  -V, --version                        output the version number
+  -h, --help                           display help for command
 
 Commands:
-  generate [options]         Generate collectibles
-  create-images [options]    Create NFT images
-  create-metadata [options]  Create metadata
-  upload-dir [options]       Upload directory to Pinata
-  sign [options]             Sign account addresses
-  help [command]             display help for command
+  generate [options]                   Generate collectibles
+  create-images [options]              Create NFT images from generated collectibles
+  create-metadata [options]            Create metadata from generated collectibles
+  create-prereveal-metadata [options]  Create prereveal metadata from generated collectibles
+  upload [options]                     Upload file or directory to Pinata
+  help [command]                       display help for command
 ```
 
 ### Generate Command
@@ -196,36 +124,36 @@ Create metadata
 Options:
   -c, --config <file>           path to configuration file (default: "config.json")
   -s, --source <file>           path to generated collectibles file (default: "build/collectibles.json")
-  -u, --unreveal                unreveal flag
-  -p, --image-path <path>       if unreveal flag is true, this is full path to unrevealed image. Otherwise path prefix to image
+  -p, --image-url-prefix <path> Image url prefix e.g. ipfs://xxx
   -o, --output-directory <dir>  output directory (default: "build/metadata")
   -h, --help                    display help for command
 ```
 
-### Upload Directory Command
+### Create Pre-reveal Metadata Command
 
 ```bash
-Usage: cli upload-dir [options]
+Usage: cli create-metadata [options]
 
-Upload directory to Pinata
+Create pre-reveal metadata
+
+Options:
+  -c, --config <file>           path to configuration file (default: "config.json")
+  -s, --source <file>           path to generated collectibles file (default: "build/collectibles.json")
+  -p, --image-url <path>        The pre-reveal image url e.g. ipfs://xxx
+  -o, --output-directory <dir>  output directory (default: "build/metadata")
+  -h, --help                    display help for command
+```
+
+### Upload File or Directory Command
+
+```bash
+Usage: cli upload [options]
+
+Upload file or directory to Pinata
 
 Options:
   -k, --api-key <string>     Pinata API key
   -s, --api-secret <string>  Pinata API secret
-  -d, --directory <dir>      directory to upload
+  -f, --file <file>          file or directory to upload
   -h, --help                 display help for command
-```
-
-### Sign Accounts Command
-
-```bash
-Usage: cli sign [options]
-
-Sign account addresses
-
-Options:
-  -i, --input <file>          input file path containing addresses
-  -k, --private-key <string>  private key used for signing message
-  -o, --output <file>         output file path containing list of signed message (default: "signatures.json")
-  -h, --help                  display help for command
 ```
